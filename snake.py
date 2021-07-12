@@ -1,8 +1,7 @@
 import turtle
 import time
 import random
-import sys
-sys.setrecursionlimit(10**7)
+import gc
 
 screen = turtle.getscreen()
 canvas = screen.getcanvas()
@@ -53,7 +52,7 @@ border.left(90)
 border.hideturtle()
 
 snake.penup()
-snake.goto(1000, -1000)
+snake.goto(1200, -1200)
 snake.setheading(90)
 snake.speed(0)
 snake.shape("turtle")
@@ -71,6 +70,7 @@ enemy_parts = {}
 enemy_last_positions = {}
 enemy_last_positions[0] = [enemy.xcor(), enemy.ycor()]
 enemy_next_pos = []
+snake_next_pos = []
 
 food = turtle.Turtle()
 food.shape("circle")
@@ -78,7 +78,7 @@ food.color("red")
 food.penup()
 food.goto(random.randrange(-980, 981, 20), random.randrange(-980, 981, 20))
 
-delay = 0.001
+delay = 0.005
 score = 0
 enemy_score = 0
 high_score = 0
@@ -134,11 +134,12 @@ while(running):
         time.sleep(delay)
     screen.update()
     time.sleep(delay)
-    # snake.forward(20)
+    snake.forward(20)
     enemy.forward(20)
 
     # NORMALIZE
     enemy.goto(round(enemy.xcor()), round(enemy.ycor()))
+    snake.goto(round(snake.xcor()), round(snake.ycor()))
 
     # IA
     if(enemy.xcor() < food.xcor()):
@@ -157,13 +158,29 @@ while(running):
             enemy_next_pos = [enemy.xcor(),
                               enemy.ycor() - 20]
 
+    if(snake.xcor() < food.xcor()):
+        snake.setheading(0)
+        snake_next_pos = [snake.xcor() + 20, snake.ycor()]
+    elif(snake.xcor() > food.xcor()):
+        snake.setheading(180)
+        snake_next_pos = [snake.xcor() - 20, snake.ycor()]
+    else:
+        if(snake.ycor() < food.ycor()):
+            snake.setheading(90)
+            snake_next_pos = [snake.xcor(),
+                              snake.ycor() + 20]
+        elif(snake.ycor() > food.ycor()):
+            snake.setheading(270)
+            snake_next_pos = [snake.xcor(),
+                              snake.ycor() - 20]
     # CHECK IF TARGET IS PART OF HIMSELF
 
     # TODO CHECK IF NEXT POSITION IS CLOSED (ALL DIECTION RESULT TO DEATH)
     def recursive_path():
         global paused
         global enemy_next_pos
-        print(len(enemy_parts.keys()), len(enemy_last_positions))
+        global snake_next_pos
+
         for i in enemy_parts.keys():
 
             if(enemy_last_positions[i][0] == enemy_next_pos[0] and enemy_last_positions[i][1] == enemy_next_pos[1]):
@@ -172,75 +189,110 @@ while(running):
                     enemy.setheading(0)
                     enemy_next_pos = [enemy.xcor() + 20, enemy.ycor()]
                     recursive_path()
-                    break
 
                 elif(i > 0 and enemy_last_positions[i][0] == enemy.xcor() and enemy_last_positions[i - 1][0] > enemy_last_positions[i][0]):
                     enemy.setheading(180)
                     enemy_next_pos = [enemy.xcor() - 20, enemy.ycor()]
                     recursive_path()
-                    break
 
                 elif(i > 0 and enemy_last_positions[i - 1][1] > enemy_last_positions[i][1] and enemy_last_positions[i][1] == enemy.ycor()):
                     enemy.setheading(270)
                     enemy_next_pos = [enemy.xcor(), enemy.ycor() - 20]
                     recursive_path()
-                    break
-                        
+
                 elif(i > 0 and enemy_last_positions[i - 1][1] < enemy_last_positions[i][1] and enemy_last_positions[i][1] == enemy.ycor()):
                     enemy.setheading(90)
                     enemy_next_pos = [enemy.xcor(), enemy.ycor() + 20]
                     recursive_path()
-                    break
 
                 elif(enemy_last_positions[i][0] == enemy.xcor() and enemy_last_positions[i][1] >= enemy.ycor()):
                     enemy.setheading((0))
                     enemy_next_pos = [enemy.xcor() + 20, enemy.ycor()]
                     recursive_path()
-                    break
 
                 elif(enemy_last_positions[i][0] == enemy.xcor() and enemy_last_positions[i][1] < enemy.ycor()):
                     enemy.setheading(180)
                     enemy_next_pos = [enemy.xcor() - 20, enemy.ycor()]
                     recursive_path()
-                    break
-                            
+
                 elif(enemy_last_positions[i][0] >= enemy.xcor() and enemy_last_positions[i][1] == enemy.ycor()):
                     enemy.setheading(270)
                     enemy_next_pos = [enemy.xcor(), enemy.ycor() - 20]
                     recursive_path()
-                    break
-                            
+
                 elif(enemy_last_positions[i][0] < enemy.xcor() and enemy_last_positions[i][1] == enemy.ycor()):
                     enemy.setheading(90)
                     enemy_next_pos = [enemy.xcor(), enemy.ycor() + 20]
                     recursive_path()
-                    break
                 break
-    recursive_path()
 
-    # FOR TWO BOTS
+        for i in snake_parts.keys():
 
-    # if(round(snake.ycor()) < round(food.ycor())):
-    #     snake.setheading(90)
-    # elif(round(snake.ycor()) > round(food.ycor())):
-    #     snake.setheading(270)
-    # else:
-    #     if(round(snake.xcor()) < round(food.xcor())):
-    #         snake.setheading(0)
-    #     elif(round(snake.xcor()) > round(food.xcor())):
-    #         snake.setheading(180)
+            if(snake_last_positions[i][0] == snake_next_pos[0] and snake_last_positions[i][1] == snake_next_pos[1]):
+
+                if(i > 0 and snake_last_positions[i][0] == snake.xcor() and snake_last_positions[i - 1][0] < snake_last_positions[i][0]):
+                    snake.setheading(0)
+                    snake_next_pos = [snake.xcor() + 20, snake.ycor()]
+                    recursive_path()
+
+                elif(i > 0 and snake_last_positions[i][0] == snake.xcor() and snake_last_positions[i - 1][0] > snake_last_positions[i][0]):
+                    snake.setheading(180)
+                    snake_next_pos = [snake.xcor() - 20, snake.ycor()]
+                    recursive_path()
+
+                elif(i > 0 and snake_last_positions[i - 1][1] > snake_last_positions[i][1] and snake_last_positions[i][1] == snake.ycor()):
+                    snake.setheading(270)
+                    snake_next_pos = [snake.xcor(), snake.ycor() - 20]
+                    recursive_path()
+
+                elif(i > 0 and snake_last_positions[i - 1][1] < snake_last_positions[i][1] and snake_last_positions[i][1] == snake.ycor()):
+                    snake.setheading(90)
+                    snake_next_pos = [snake.xcor(), snake.ycor() + 20]
+                    recursive_path()
+
+                elif(snake_last_positions[i][0] == snake.xcor() and snake_last_positions[i][1] >= snake.ycor()):
+                    snake.setheading((0))
+                    snake_next_pos = [snake.xcor() + 20, snake.ycor()]
+                    recursive_path()
+
+                elif(snake_last_positions[i][0] == snake.xcor() and snake_last_positions[i][1] < snake.ycor()):
+                    snake.setheading(180)
+                    snake_next_pos = [snake.xcor() - 20, snake.ycor()]
+                    recursive_path()
+
+                elif(snake_last_positions[i][0] >= snake.xcor() and snake_last_positions[i][1] == snake.ycor()):
+                    snake.setheading(270)
+                    snake_next_pos = [snake.xcor(), snake.ycor() - 20]
+                    recursive_path()
+
+                elif(snake_last_positions[i][0] < snake.xcor() and snake_last_positions[i][1] == snake.ycor()):
+                    snake.setheading(90)
+                    snake_next_pos = [snake.xcor(), snake.ycor() + 20]
+                    recursive_path()
+                break
+
+    for i in snake_parts.keys():
+        if(enemy_next_pos[0] == snake_last_positions[i][0] and enemy_next_pos[1] == snake_last_positions[i][1] or enemy_next_pos == snake_next_pos or enemy_next_pos[0] == snake.xcor() and enemy_next_pos[1] == snake.ycor()):
+            if(enemy.heading() == 270):
+                enemy.setheading(0)
+            else:
+                enemy.setheading(enemy.heading()+90)
+    for i in enemy_parts.keys():
+        if(snake_next_pos[0] == enemy_last_positions[i][0] and snake_next_pos[1] == enemy_last_positions[i][1] or snake_next_pos == enemy_next_pos or snake_next_pos[0] == enemy.xcor() and snake_next_pos[1] == enemy.ycor()):
+            if(snake.heading() == 270):
+                snake.setheading(0)
+            else:
+                snake.setheading(snake.heading()+90)
 
     if (enemy.distance(food) < 19):
         food.goto(random.randrange(-980, 981, 20),
                   random.randrange(-980, 981, 20))
         enemy_body_part = turtle.Turtle()
-        enemy_body_part.speed(0)
         enemy_body_part.shape("circle")
         enemy_body_part.color("green")
         enemy_body_part.penup()
         enemy_parts[enemy_score] = enemy_body_part
         enemy_score += 1
-        # delay -= 0.0002
         enemy_score_writer.clear()
         enemy_score_writer._write('EnemyScore: ' + str(enemy_score),
                                   align='left', font='tahoma')
@@ -270,7 +322,6 @@ while(running):
         body_part.penup()
         snake_parts[score] = body_part
         score += 1
-        # delay -= 0.0002
         score_writer.clear()
         score_writer._write('PlayerScore: ' + str(score),
                             align='left', font='tahoma')
@@ -312,6 +363,7 @@ while(running):
         enemy_score_writer.clear()
         enemy_score_writer._write('EnemyScore: ' + str(enemy_score),
                                   align='left', font='tahoma')
+        gc.collect()
         enemy_alive = True
 
     if(not alive):
@@ -326,8 +378,8 @@ while(running):
         # game_over_writer.clear()
         for i in snake_parts.keys():
             snake_parts[i].reset()
-        # food.goto(random.randrange(-980, 981, 20),
-        #           random.randrange(-980, 981, 20))
+        food.goto(random.randrange(-980, 981, 20),
+                  random.randrange(-980, 981, 20))
         score = 0
         snake_parts = {}
         snake_last_positions = {}
@@ -336,5 +388,6 @@ while(running):
         score_writer.clear()
         score_writer._write('PlayerScore: ' + str(score),
                             align='left', font='tahoma')
-
+        gc.collect()
         alive = True
+    recursive_path()
