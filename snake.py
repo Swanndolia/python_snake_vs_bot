@@ -15,7 +15,7 @@ enemy_score_writer = turtle.Turtle()
 high_score_writer = turtle.Turtle()
 game_over_writer = turtle.Turtle()
 
-screen.setup(width=2000, height=2000)
+screen.setup(width=1000, height=1000)
 screen.title("Snake Python")
 screen.bgcolor("black")
 screen.tracer(False)
@@ -52,7 +52,7 @@ border.left(90)
 border.hideturtle()
 
 snake.penup()
-snake.goto(1200, -1200)
+snake.goto(480, -480)
 snake.setheading(90)
 snake.speed(0)
 snake.shape("turtle")
@@ -62,7 +62,7 @@ snake_last_positions = {}
 snake_last_positions[0] = [snake.xcor(), snake.ycor()]
 
 enemy.penup()
-enemy.goto(-900, 900)
+enemy.goto(-480, 480)
 enemy.speed(0)
 enemy.shape("turtle")
 enemy.color("orange")
@@ -76,7 +76,7 @@ food = turtle.Turtle()
 food.shape("circle")
 food.color("red")
 food.penup()
-food.goto(random.randrange(-980, 981, 20), random.randrange(-980, 981, 20))
+food.goto(random.randrange(-480, 481, 20), random.randrange(-480, 481, 20))
 
 delay = 0.005
 score = 0
@@ -270,23 +270,43 @@ while(running):
                     snake_next_pos = [snake.xcor(), snake.ycor() + 20]
                     recursive_path()
                 break
-
+    
     for i in snake_parts.keys():
+        if(i +1 == len(snake_parts.keys())):
+            break
         if(enemy_next_pos[0] == snake_last_positions[i][0] and enemy_next_pos[1] == snake_last_positions[i][1] or enemy_next_pos == snake_next_pos or enemy_next_pos[0] == snake.xcor() and enemy_next_pos[1] == snake.ycor()):
-            if(enemy.heading() == 270):
+            if(enemy.heading() == 0):
+                enemy.setheading(90)
+                enemy_next_pos = [enemy.xcor(), enemy.ycor() + 20]
+            elif(enemy.heading() == 90):
+                enemy.setheading(180)
+                enemy_next_pos = [enemy.xcor() - 20, enemy.ycor()]
+            elif(enemy.heading() == 180):
+                enemy.setheading(270)
+                enemy_next_pos = [enemy.xcor(), enemy.ycor() - 20]
+            elif(enemy.heading() == 270):
                 enemy.setheading(0)
-            else:
-                enemy.setheading(enemy.heading()+90)
+                enemy_next_pos = [enemy.xcor() + 20, enemy.ycor()]
+
     for i in enemy_parts.keys():
+        if(i +1 == len(enemy_parts.keys())):
+            break
         if(snake_next_pos[0] == enemy_last_positions[i][0] and snake_next_pos[1] == enemy_last_positions[i][1] or snake_next_pos == enemy_next_pos or snake_next_pos[0] == enemy.xcor() and snake_next_pos[1] == enemy.ycor()):
-            if(snake.heading() == 270):
+            if(snake.heading() == 0):
+                snake.setheading(90)
+                snake_next_pos = [snake.xcor(), snake.ycor() + 20]
+            elif(snake.heading() == 90):
+                snake.setheading(180)
+                snake_next_pos = [snake.xcor() - 20, snake.ycor()]
+            elif(snake.heading() == 180):
+                snake.setheading(270)
+                snake_next_pos = [snake.xcor(), snake.ycor() - 20]
+            elif(snake.heading() == 270):
                 snake.setheading(0)
-            else:
-                snake.setheading(snake.heading()+90)
+                snake_next_pos = [snake.xcor() + 20, snake.ycor()]
 
     if (enemy.distance(food) < 19):
-        food.goto(random.randrange(-980, 981, 20),
-                  random.randrange(-980, 981, 20))
+        food.goto(random.randrange(-480, 481, 20), random.randrange(-480, 481, 20))
         enemy_body_part = turtle.Turtle()
         enemy_body_part.shape("circle")
         enemy_body_part.color("green")
@@ -313,8 +333,7 @@ while(running):
         alive = False
 
     if (snake.distance(food) < 19):
-        food.goto(random.randrange(-980, 981, 20),
-                  random.randrange(-980, 981, 20))
+        food.goto(random.randrange(-480, 481, 20), random.randrange(-480, 481, 20))
         body_part = turtle.Turtle()
         body_part.speed(0)
         body_part.shape("circle")
@@ -358,7 +377,7 @@ while(running):
         enemy_score = 0
         enemy_parts = {}
         enemy_last_positions = {}
-        enemy.goto(-900, 900)
+        enemy.goto(-480, 480)
         enemy_last_positions[0] = [enemy.xcor(), enemy.ycor()]
         enemy_score_writer.clear()
         enemy_score_writer._write('EnemyScore: ' + str(enemy_score),
@@ -378,12 +397,10 @@ while(running):
         # game_over_writer.clear()
         for i in snake_parts.keys():
             snake_parts[i].reset()
-        food.goto(random.randrange(-980, 981, 20),
-                  random.randrange(-980, 981, 20))
         score = 0
         snake_parts = {}
         snake_last_positions = {}
-        snake.goto(900, -900)
+        snake.goto(480, -480)
         snake_last_positions[0] = [snake.xcor(), snake.ycor()]
         score_writer.clear()
         score_writer._write('PlayerScore: ' + str(score),
